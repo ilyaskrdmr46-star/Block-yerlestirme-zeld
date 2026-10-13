@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK From Zip
 
 on:
   workflow_dispatch:
@@ -16,20 +16,29 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Extract Project Zip
+        run: |
+          sudo apt-get install unzip
+          # Klasördeki ilk bulduğu .zip dosyasını dışarı çıkartır
+          unzip -o *.zip
+          # Dosyaların nereye çıktığını kontrol etmek için listele
+          ls -R
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build Android APK
         run: |
+          # Eğer alt klasöre çıktıysa oraya girip derler, yoksa ana dizinde çalışır
           if [ -f "gradlew" ]; then
             chmod +x gradlew
             ./gradlew assembleDebug
-          elif [ -f "BlockPuzzleBotTablet/gradlew" ]; then
+          elif [ -d "BlockPuzzleBotTablet" ]; then
             cd BlockPuzzleBotTablet
             chmod +x gradlew
             ./gradlew assembleDebug
           else
-            echo "Gradlew bulunamadı, ana dizinde derleniyor."
+            # Eğer gradlew hiç yoksa sistemin kendi gradle motorunu kullanır
             gradle assembleDebug
           fi
 
